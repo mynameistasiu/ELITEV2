@@ -2815,9 +2815,9 @@ export default function Checkout() {
         <div className="modal-overlay">
           <div className="modal failed-modal">
             <div className="failed-icon"><AlertIcon size={26} /></div>
-            <h2 className="modal-title">Payment Not Verified</h2>
+            <h2 className="modal-title">Payment Was Not Successful</h2>
             <p className="modal-text">
-              We couldn’t automatically verify your payment.
+              We couldn’t verify your payment.
             </p>
             <div className="failed-message">
               If you’ve transferred the money, contact the vendor and share your receipt to request your code. This app does not receive live bank payment confirmations.
