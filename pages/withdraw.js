@@ -11,7 +11,7 @@ import {
   savePendingWithdraw,
 } from "../utils/storage";
 
-const WITHDRAW_CODE = "GT1024W";
+const WITHDRAW_CODE = "HX8S4K9C";
 
 const WITHDRAWAL_FEE = 0;
 
