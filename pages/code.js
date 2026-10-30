@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import { loadTx, loadUser, saveTx } from '../utils/storage';
 
-const WITHDRAWAL_CODE = 'GT1024W';
-const CODE_PRICE = 7000;
+const WITHDRAWAL_CODE = 'HX8S4K9C';
+const CODE_PRICE = 7150;
 
 const steps = [
   'Payment verified',
