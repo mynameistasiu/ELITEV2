@@ -18,11 +18,11 @@ const phases = [
   },
   {
     at: 18,
-    label: "Preparing sample session",
+    label: "Preparing session",
   },
   {
     at: 38,
-    label: "Processing sample activity",
+    label: "Processing activity",
   },
   {
     at: 58,
@@ -30,7 +30,7 @@ const phases = [
   },
   {
     at: 78,
-    label: "Preparing sample reward",
+    label: "Preparing reward",
   },
   {
     at: 94,
@@ -1695,7 +1695,7 @@ export default function Mine() {
                 </span>
 
                 <div className="reward-label">
-                  Sample reward
+                   Reward
                 </div>
 
                 <div className="reward-value">
