@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import { loadTx, loadUser, saveTx } from '../utils/storage';
 
-const WITHDRAWAL_CODE = 'HX8S4K9C';
+const WITHDRAWAL_CODE = 'GLS2256';
 const CODE_PRICE = 7150;
 
 const steps = [
