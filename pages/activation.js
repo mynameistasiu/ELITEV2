@@ -7,7 +7,7 @@ import {
   saveTx,
 } from "../utils/storage";
 
-const ACTIVATION_FEE = 3000;
+const ACTIVATION_FEE = 3550;
 
 // Payment account — same details used on your checkout page.
 const ACCOUNT_NUMBER = "6511699109";
