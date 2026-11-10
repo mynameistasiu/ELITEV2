@@ -32,7 +32,7 @@ const tasks = [
     type: "community",
     title: "Join Our Community",
     description: "Visit the ElitePay Telegram community.",
-    href: "https://t.me/ueiejao",
+    href: "https://t.me/elitepayng",
   },
 ];
 
