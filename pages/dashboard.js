@@ -1858,7 +1858,7 @@ export default function Dashboard() {
 
                 <a
                   className="quick-action"
-                  href="https://t.me/ueiejao"
+                  href="https://t.me/elitepayng"
                   target="_blank"
                   rel="noreferrer"
                 >
