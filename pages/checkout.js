@@ -10,7 +10,7 @@ const ACCOUNT_NAME = 'Usman Abdulrahim';
 const BANK_NAME = 'Moniepoint MFB';
 
 // WhatsApp number in international format
-const WA_NUMBER = '2347039425245';
+const WA_NUMBER = '2348068991240';
 
 function CopyIcon({ size = 17 }) {
   return (
