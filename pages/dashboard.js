@@ -72,60 +72,57 @@ export default function Dashboard() {
   }, [router]);
 
   /*
-   * ---------------------------------------------------------
-   * RESTRICTION CHECK
-   * ---------------------------------------------------------
-   */
-  useEffect(() => {
-    const checkRestriction = () => {
-      try {
-        const activated =
-          localStorage.getItem("gt_activated") === "true";
+ * ---------------------------------------------------------
+ * RESTRICTION CHECK
+ * ---------------------------------------------------------
+ */
+useEffect(() => {
+  const checkRestriction = () => {
+    try {
+      const storedEnd = localStorage.getItem(
+        "gt_restriction_end"
+      );
 
-        if (activated) {
-          setRestricted(false);
-          setTimeLeft(0);
-          return;
-        }
-
-        const end =
-          localStorage.getItem(
-            "gt_restriction_end"
-          );
-
-        if (!end) {
-          setRestricted(false);
-          setTimeLeft(0);
-          return;
-        }
-
-        const remaining =
-          Number(end) - Date.now();
-
-        if (remaining <= 0) {
-          setRestricted(true);
-          setTimeLeft(0);
-        } else {
-          setRestricted(false);
-          setTimeLeft(remaining);
-        }
-      } catch (error) {
-        console.error(
-          "Restriction check error:",
-          error
-        );
+      if (!storedEnd) {
+        setRestricted(false);
+        setTimeLeft(0);
+        return;
       }
-    };
 
-    checkRestriction();
+      const end = Number(storedEnd);
 
-    const interval = setInterval(
-      checkRestriction,
-      1000
-    );
+      if (!Number.isFinite(end) || end <= 0) {
+        setRestricted(false);
+        setTimeLeft(0);
+        return;
+      }
 
-    return () => clearInterval(interval);
-  }, []);
+      const remaining = end - Date.now();
+
+      if (remaining <= 0) {
+        setRestricted(true);
+        setTimeLeft(0);
+      } else {
+        setRestricted(false);
+        setTimeLeft(remaining);
+      }
+    } catch (error) {
+      console.error(
+        "Restriction check error:",
+        error
+      );
+    }
+  };
+
+  checkRestriction();
+
+  const interval = setInterval(
+    checkRestriction,
+    1000
+  );
+
+  return () => clearInterval(interval);
+}, []);
 
   /*
    * ---------------------------------------------------------
