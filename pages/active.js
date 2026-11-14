@@ -5,108 +5,261 @@ import { loadUser } from "../utils/storage";
 
 export default function Active() {
   const router = useRouter();
+
   const [ready, setReady] = useState(false);
   const [activated, setActivated] = useState(false);
   const [activationError, setActivationError] = useState("");
+  const [timeRemaining, setTimeRemaining] = useState(0);
 
+  /*
+   * ---------------------------------------------------------
+   * CHECK ACCOUNT + RESTRICTION TIMER
+   * ---------------------------------------------------------
+   */
   useEffect(() => {
     if (!loadUser()) {
       router.replace("/login");
       return;
     }
 
-    try {
-      setActivated(localStorage.getItem("gt_activated") === "true");
-    } catch (error) {
-      console.error("Unable to read activation status:", error);
-    }
+    const checkStatus = () => {
+      try {
+        const end = Number(
+          localStorage.getItem("gt_restriction_end") || 0
+        );
+
+        if (Number.isFinite(end) && end > Date.now()) {
+          setTimeRemaining(end - Date.now());
+        } else {
+          setTimeRemaining(0);
+        }
+
+        setActivated(
+          localStorage.getItem("gt_activated") === "true"
+        );
+      } catch (error) {
+        console.error(
+          "Unable to read account status:",
+          error
+        );
+      }
+    };
+
+    checkStatus();
+
+    const interval = setInterval(checkStatus, 1000);
+
     setReady(true);
+
+    return () => clearInterval(interval);
   }, [router]);
 
+  /*
+   * ---------------------------------------------------------
+   * FORMAT COUNTDOWN
+   * ---------------------------------------------------------
+   */
+  const formatTime = (ms) => {
+    const totalSeconds = Math.ceil(ms / 1000);
+
+    const minutes = Math.floor(totalSeconds / 60);
+
+    const seconds = totalSeconds % 60;
+
+    return `${minutes}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  /*
+   * ---------------------------------------------------------
+   * ACCOUNT ACTIVATION
+   * ---------------------------------------------------------
+   */
   const activateAndContinue = () => {
     setActivationError("");
 
-    if (activated) {
-      router.replace("/dashboard");
-      return;
-    }
-
     try {
-      localStorage.setItem("gt_activated", "true");
+      const storedEnd = localStorage.getItem(
+        "gt_restriction_end"
+      );
+
+      const restrictionEnd = Number(storedEnd || 0);
+
+      // Prevent activation while the restriction timer is running.
+      if (
+        storedEnd &&
+        Number.isFinite(restrictionEnd) &&
+        restrictionEnd > Date.now()
+      ) {
+        const remaining = restrictionEnd - Date.now();
+
+        setTimeRemaining(remaining);
+
+        setActivationError(
+          "Your wallet is still restricted. Please wait for the countdown to finish."
+        );
+
+        return;
+      }
+
+      // Remove an expired or invalid restriction timestamp.
       localStorage.removeItem("gt_restriction_end");
+
+      // Already activated: continue to the dashboard.
+      if (activated) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      // Activate after the restriction period has ended.
+      localStorage.setItem("gt_activated", "true");
+
       setActivated(true);
+      setTimeRemaining(0);
+
       router.replace("/dashboard");
     } catch (error) {
-      console.error("Unable to activate account:", error);
+      console.error(
+        "Unable to activate account:",
+        error
+      );
+
       setActivationError(
-        "We couldn’t update your account status. Please check your browser storage and try again."
+        "We couldn't update your account status. Please check your browser storage and try again."
       );
     }
   };
+
+  const waiting = timeRemaining > 0;
 
   return (
     <Layout title="Account Activation - ElitePay Wallet">
       <main className="activation-page">
         <section className="activation-card" aria-live="polite">
-          <div className={`status-pill${activated ? " is-active" : ""}`}>
+
+          {/* ACCOUNT STATUS */}
+          <div
+            className={`status-pill${
+              activated && !waiting ? " is-active" : ""
+            }`}
+          >
             <span className="status-dot" />
-            {activated ? "ACCOUNT ACTIVE" : "ACCOUNT RESTRICTED"}
+
+            {waiting
+              ? "RESTRICTION IN PROGRESS"
+              : activated
+                ? "ACCOUNT ACTIVE"
+                : "ACCOUNT RESTRICTED"}
           </div>
 
-          <h1>{activated ? "You’re all set" : "Restore wallet access"}</h1>
+          {/* PAGE TITLE */}
+          <h1>
+            {waiting
+              ? "Please wait"
+              : activated
+                ? "You're all set"
+                : "Restore wallet access"}
+          </h1>
+
           <p className="activation-description">
-            {activated
-              ? "Your account is activated. Continue to your wallet dashboard."
-              : "Tap the button to restore wallet access and return to your dashboard."}
+            {waiting
+              ? "Your wallet restriction period is still running. You can restore access when the countdown finishes."
+              : activated
+                ? "Your account is activated. Continue to your wallet dashboard."
+                : "Your restriction period has ended. Activate your account to restore wallet access."}
           </p>
 
+          {/* ACTIVATION BUTTON */}
           <button
-            className={`activation-circle${activated ? " is-active" : ""}`}
+            className={`activation-circle${
+              activated && !waiting ? " is-active" : ""
+            }`}
             type="button"
             onClick={activateAndContinue}
-            disabled={!ready}
-            aria-label={activated ? "Continue to dashboard" : "Activate account and open dashboard"}
+            disabled={!ready || waiting}
+            aria-label={
+              waiting
+                ? "Please wait for restriction period to end"
+                : activated
+                  ? "Continue to dashboard"
+                  : "Activate account and open dashboard"
+            }
           >
             <span className="circle-ring circle-ring-one" />
             <span className="circle-ring circle-ring-two" />
+
             <span className="circle-content">
               <span className="circle-icon" aria-hidden="true">
-                {activated ? "✓" : "↗"}
+                {waiting
+                  ? "⌛"
+                  : activated
+                    ? "✓"
+                    : "↗"}
               </span>
+
               <strong>
                 {!ready
                   ? "Loading"
-                  : activated
-                    ? "Open Wallet"
-                    : "Activate"}
+                  : waiting
+                    ? "Please Wait"
+                    : activated
+                      ? "Open Wallet"
+                      : "Activate"}
               </strong>
-              {!activated && <small>Tap to open dashboard</small>}
+
+              {waiting ? (
+                <small>
+                  {formatTime(timeRemaining)} remaining
+                </small>
+              ) : (
+                !activated && (
+                  <small>Tap to open dashboard</small>
+                )
+              )}
             </span>
           </button>
 
+          {/* ERROR MESSAGE */}
           {activationError && (
             <p className="activation-error" role="alert">
               {activationError}
             </p>
           )}
 
+          {/* INFORMATION */}
           <div className="activation-hint">
-            {activated
-              ? "Wallet access is currently active."
-              : "This updates the activation status saved in this browser."}
+            {waiting
+              ? `Please wait ${formatTime(timeRemaining)} before continuing.`
+              : activated
+                ? "Wallet access is currently active."
+                : "Your restriction period has ended. You can now restore access."}
           </div>
 
+          {/* ACTIVATION DETAILS */}
           {!activated && (
             <div className="activation-details">
-              <h2>What this does</h2>
+              <h2>
+                {waiting
+                  ? "Restriction information"
+                  : "What happens next"}
+              </h2>
+
               <div className="activation-step">
                 <span>✓</span>
-                <p>Removes the local wallet restriction and opens your dashboard.</p>
+
+                <p>
+                  {waiting
+                    ? "Your wallet access will remain restricted until the countdown reaches zero."
+                    : "Activate your account to remove the expired restriction and return to your dashboard."}
+                </p>
               </div>
-              <p className="activation-note">
-                This app stores account status in your browser. It does not verify
-                payment or change any server-side account status.
-              </p>
+
+              <div className="activation-note">
+                Account status is currently stored in your browser.
+                This page does not verify payment or activation codes
+                through a server.
+              </div>
             </div>
           )}
         </section>
@@ -126,7 +279,11 @@ export default function Active() {
           border: 1px solid var(--gt-border);
           border-radius: 24px;
           background:
-            radial-gradient(circle at 50% 22%, rgba(29, 158, 104, 0.07), transparent 34%),
+            radial-gradient(
+              circle at 50% 22%,
+              rgba(29, 158, 104, 0.07),
+              transparent 34%
+            ),
             var(--gt-card);
           box-shadow: var(--gt-shadow-hover);
           text-align: center;
@@ -188,12 +345,19 @@ export default function Active() {
           border: 0;
           border-radius: 50%;
           color: #fff;
-          background: linear-gradient(145deg, #0b6747, #159568 58%, #35b77f);
+          background: linear-gradient(
+            145deg,
+            #0b6747,
+            #159568 58%,
+            #35b77f
+          );
           box-shadow:
             0 16px 34px rgba(12, 112, 75, 0.28),
             inset 0 2px 4px rgba(255, 255, 255, 0.32);
           cursor: pointer;
-          transition: transform 180ms ease, box-shadow 180ms ease;
+          transition:
+            transform 180ms ease,
+            box-shadow 180ms ease;
           isolation: isolate;
         }
 
@@ -210,12 +374,17 @@ export default function Active() {
         }
 
         .activation-circle:disabled {
-          cursor: wait;
+          cursor: not-allowed;
           opacity: 0.72;
+          transform: none;
         }
 
         .activation-circle.is-active {
-          background: linear-gradient(145deg, #087449, #159568);
+          background: linear-gradient(
+            145deg,
+            #087449,
+            #159568
+          );
         }
 
         .circle-ring {
