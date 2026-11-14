@@ -2120,7 +2120,7 @@ useEffect(() => {
             <button
               className="restriction-button"
               onClick={() =>
-                router.push("/active")
+                router.push("/activation")
               }
             >
               Activate Account
